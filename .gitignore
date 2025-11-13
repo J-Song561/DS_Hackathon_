@@ -33,5 +33,15 @@ node_modules/
 dist/
 build/
 
-# OS
+# Windows
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
