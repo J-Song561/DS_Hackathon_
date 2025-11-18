@@ -1,0 +1,21 @@
+{
+ "manifest_version": 3,
+ "name": "유해도 검사기",
+ "version": "0.1",
+ 
+ "content_scripts": [
+     {  
+ "matches": ["https://www.youtube.com/*"],
+ "js": ["frontend/js/content_script.js"],
+ "css": ["frontend/css/warning_banner.css"] 
+ }
+ ],
+ 
+ "background": {
+ "service_worker": "background.js"
+ },
+ "permissions": [
+ "storage",
+ "activeTab" 
+ ]
+}

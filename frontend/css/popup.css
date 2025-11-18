@@ -1,0 +1,24 @@
+.grade-danger {
+    border: 3px solid red;
+    background-color: #ffe0e0;
+}
+
+#popup-wrapper {
+    width: 300px;
+    padding: 10px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+#score-display {
+    font-size: 3em; /* 3배 크기 */
+    font-weight: bold;
+    color: red;
+}
+
+#grade-display {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: red;
+    margin-bottom: 10px;
+}
