@@ -68,6 +68,6 @@ class ThumbnailClassifier:
             }
         }
 
-# Initialize once when Django starts
-MODEL_PATH = os.path.join(settings.BASE_DIR, 'ml_models', 'models', 'watchwise_thumbnail_classifier.pkl')
+# Django 서버가 시작될 때 모델 파일 경로를 설정하고 분류기를 한 번만 로드하여 메모리에 유지
+MODEL_PATH = os.path.join(settings.BASE_DIR, 'ml_models', 'watchwise_thumbnail_classifier.pkl')
 thumbnail_classifier = ThumbnailClassifier(MODEL_PATH)
