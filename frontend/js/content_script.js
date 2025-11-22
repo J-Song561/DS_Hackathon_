@@ -6,9 +6,9 @@ function isYoutubeShorts() {
   return location.pathname.startsWith("/shorts/");
 }
 
-// 경고 배너 DOM 만드는 함수
+
 function createWarningBanner(analysisData) {
-  // 이미 있으면 다시 만들지 않기
+
   if (document.getElementById("yt-warning-banner")) return;
 
   const analysis = analysisData.analysis || {};
@@ -63,7 +63,7 @@ function createWarningBanner(analysisData) {
   });
 }
 
-// 실제 분석 요청 보내기
+
 function analyzeCurrentVideo() {
   if (!isYoutubeShorts()) {
     console.log("쇼츠 URL이 아님, 분석 스킵");
