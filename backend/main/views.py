@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.views.decorators.csrf import csrf_exempt  
+from django.utils.decorators import method_decorator
 import logging
 
 from .utils import fetch_youtube_transcript
@@ -8,7 +10,7 @@ from .analyzer import analyze_video_complete
 
 logger = logging.getLogger(__name__)
 
-
+@method_decorator(csrf_exempt, name='dispatch')
 class VideoHazardAnalyzeView(APIView):
     def post(self, request):
         # 1. URL 검증
@@ -45,9 +47,12 @@ class VideoHazardAnalyzeView(APIView):
         
         # 3. 대본 + 썸네일 통합 분석
         try:
+            video_id = transcript_data.get("video_id")
+            thumbnail_url = f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
+            
             analysis_result = analyze_video_complete(
                 transcript=transcript_data.get("transcript", ""),
-                thumbnail_url=transcript_data.get("thumbnail_url", "")
+                thumbnail_url=thumbnail_url
             )
             
             logger.info(
