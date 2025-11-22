@@ -16,6 +16,10 @@ def get_video_id(url):  # YouTube URL에서 video ID 추출
         if url_data.path.startswith('/embed/'):
             return url_data.path.split('/embed/')[1]
         
+        # Shorts URL: youtube.com/shorts/VIDEO_ID
+        if url_data.path.startswith('/shorts/'):
+            return url_data.path.split('/shorts/')[1].split('?')[0]
+        
     except Exception:
         return None
         
