@@ -1,93 +1,61 @@
-console.log("코드 실행 확인용!!!");
 // background.js
 
+console.log("BG: 시작!");
 
 // =========================================================
-// 1. 탭 URL 변경 감지 (SPA 문제 해결)
+// 1. 탭 URL 변경 감지 (SPA 문제 해결 - 감시자)
 // =========================================================
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     
-    // 1. 탭의 URL이 있고, 페이지 로딩이 '완료'되었는지 확인
-    if (tab.url && changeInfo.status === 'complete') {
+    // 탭 로딩이 완료되었고 URL이 있을 때
+    if (changeInfo.status === 'complete' && tab.url) {
         
-        // 2. 그 URL이 '유튜브 롱폼' 또는 '쇼츠' 페이지인지 확인
+        // 유튜브 롱폼 또는 쇼츠 페이지인지 확인
         if (tab.url.includes("youtube.com/watch") || tab.url.includes("youtube.com/shorts")) {
             
             console.log(`BG: 새 영상 페이지 감지! [${tabId}] - ${tab.url}`);
             
-            // 3. '현장 요원'(content_script.js)에게 "일어나!" 메시지 전송
+            // '현장 요원'(content_script.js)에게 실행 신호 전송
             chrome.tabs.sendMessage(tabId, {
-                type: "NEW_VIDEO_LOADED", // 실행 신호
+                type: "NEW_VIDEO_LOADED",
                 url: tab.url
             }).catch(error => {
-                // 현장 요원이 주입되지 않은 탭에서는 에러가 발생할 수 있습니다 (무시해도 됨)
-                // console.warn("BG: 현장 요원에게 신호 전송 실패 (탭이 아직 준비 안됨)");
+                // 아직 스크립트가 주입되지 않은 탭일 수 있음 (무시 가능)
+                // console.log("BG: 아직 신호를 받을 준비가 안 됨");
             });
         }
     }
 });
 
-
 // =========================================================
-// 2. content_script의 분석 요청 처리
+// 2. 분석 요청 처리 (통신병)
 // =========================================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     
-    // 메시지 제목이 "ANALYZE_VIDEO" (분석 요청)인지 확인
     if (message.type === "ANALYZE_VIDEO") {
-        console.log("BG: 현장 요원으로부터 분석 요청 수신. 백엔드 연결 시작.");
+        console.log("BG: 현장 요원으로부터 분석 요청 수신:", message.url);
         
-        // 백엔드(Django) 서버 URL. (나중에 팀원이 설정할 URL로 교체해야 함)
-        const djangoApiUrl = "https://your-django-server.com/api/analyze/";
+        // ★ 로컬 테스트용 Django 서버 주소로 통일했습니다.
+        const djangoApiUrl = "http://localhost:8000/api/analyze/transctipt/"; 
         
-        // fetch는 비동기 함수이므로, return true를 통해 응답을 기다립니다.
         fetch(djangoApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: message.url }) // { "url": "..." } 전송
+            body: JSON.stringify({ url: message.url })
         })
         .then(response => {
-            if (!response.ok) {
-                // HTTP 에러 상태 코드(4xx, 5xx) 처리
-                throw new Error(`HTTP Error! Status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             return response.json();
         })
         .then(data => {
-            console.log("BG: 백엔드 분석 결과 수신 및 현장 요원에게 전달.");
+            console.log("BG: 백엔드 결과 수신 완료:", data);
             sendResponse(data); 
         })
         .catch(error => {
-            console.error("BG: 백엔드 통신 에러 발생:", error);
-            // 에러 발생 시, 에러 메시지를 프론트엔드에 전달
-            sendResponse({ error: error.message || "알 수 없는 통신 에러" }); 
+            console.error("BG: 백엔드 통신 실패:", error);
+            sendResponse({ error: error.message });
         });
 
-        // 비동기 응답(fetch)을 처리하기 위해 true 반환 (필수!)
-        return true; 
+        return true; // 비동기 응답 유지 필수
     }
-    // 다른 메시지 타입은 무시하고, 기본적으로 false 반환
-    return false;
 });
-  if (message.type === "ANALYZE_VIDEO") {
-    console.log("현장 요원으로부터 URL 수신:", message.url);
-
-    const djangoApiUrl = "http://localhost:8000/api/analyze/transctipt/";
-
-    fetch(djangoApiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: message.url }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("백엔드로부터 분석 결과 수신:", data);
-        sendResponse(data);
-      })
-      .catch((error) => {
-        console.error("백엔드 통신 에러:", error);
-        sendResponse({ error: error.message });
-      });
-
-    return true; // 비동기 응답 유지
-  };
