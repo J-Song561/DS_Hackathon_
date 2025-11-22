@@ -1,94 +1,137 @@
 // frontend/js/content_script.js
 
-console.log("CONTENT SCRIPT EXECUTED!");
-
-function isYoutubeShorts() {
-  return location.pathname.startsWith("/shorts/");
-}
+// 1. 초기화: '현장 요원' 주입 완료 로그
+console.log("CS: '현장 요원' 주입 완료. '본부'의 신호 대기 중...");
 
 
-function createWarningBanner(analysisData) {
+// =========================================================
+// 1. 메시지 수신 및 실행 블록 (SPA 트리거)
+// =========================================================
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    // '본부'로부터 '새 영상 로드' 신호를 받으면 실행
+    if (message.type === "NEW_VIDEO_LOADED") {
+        
+        console.log("CS: '본부'로부터 신호 수신! 분석 시작.");
 
-  if (document.getElementById("yt-warning-banner")) return;
-
-  const analysis = analysisData.analysis || {};
-  const level = analysis.hazard_level || "NONE";
-  const score = analysis.total_score ?? analysis.score ?? "N/A";
-  const summary =
-    analysis.analysis_summary ||
-    analysis.message ||
-    "유해도 분석 결과를 불러오지 못했습니다.";
-
-  const banner = document.createElement("div");
-  banner.id = "yt-warning-banner";
-
-  if (level === "HIGH") {
-    banner.classList.add("grade-danger");
-  } else if (level === "MEDIUM") {
-    banner.classList.add("grade-warn");
-  }
-
-  banner.innerHTML = `
-    <div class="warning-header">
-      <h4>
-        <svg viewBox="0 0 24 24">
-          <polygon points="12,2 22,20 2,20"></polygon>
-          <line x1="12" y1="8" x2="12" y2="13"></line>
-          <circle cx="12" cy="17" r="1"></circle>
-        </svg>
-        유해도 경고 (${score}점)
-      </h4>
-      <button id="warning-close-btn">×</button>
-    </div>
-    <div class="warning-body">
-      <p><strong>등급:</strong> ${level}</p>
-      <p>${summary}</p>
-      <button id="warning-details-btn">상세 분석 보기</button>
-      <div class="warning-details" id="warning-details-box">
-        <!-- 나중에 키워드/타임스탬프 등 추가 가능 -->
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(banner);
-
-  document
-    .getElementById("warning-close-btn")
-    .addEventListener("click", () => banner.remove());
-
-  const detailsBtn = document.getElementById("warning-details-btn");
-  const detailsBox = document.getElementById("warning-details-box");
-  detailsBtn.addEventListener("click", () => {
-    detailsBox.classList.toggle("show");
-  });
-}
-
-
-function analyzeCurrentVideo() {
-  if (!isYoutubeShorts()) {
-    console.log("쇼츠 URL이 아님, 분석 스킵");
-    return;
-  }
-
-  const currentUrl = location.href;
-  console.log("쇼츠 URL 감지, 백엔드 분석 요청:", currentUrl);
-
-  chrome.runtime.sendMessage(
-    {
-      type: "ANALYZE_VIDEO",
-      url: currentUrl,
-    },
-    (response) => {
-      if (!response || response.error) {
-        console.error("분석 실패:", response && response.error);
-        return;
-      }
-      console.log("분석 결과 수신:", response);
-      createWarningBanner(response);
+        // 1-1. (가짜 데이터) - 백엔드가 완성되면 이 부분을 API 호출 로직으로 바꿉니다.
+        const mockAnalysis = {
+            riskLevel: '높음', // '높음' 또는 '주의'
+            summaryMessage: "이 영상은 '충격' 등 자극적인 단어를 3회 사용했습니다. 내용이 과장되었을 수 있으니 주의하세요.",
+            issues: [
+                { timestamp: '제목', text: '🔥 충격! 절대 클릭하지 마세요', reason: '자극적인 제목' },
+                { timestamp: '0:15', text: '...정말 충격적인 소식입니다...', reason: '자극적인 단어 사용' }
+            ]
+        };
+        
+        // 1-2. 배너 주입 함수 실행
+        // (페이지 내용이 완전히 로드될 때까지 약간의 여유를 줍니다)
+        setTimeout(() => {
+            injectWarningBanner(mockAnalysis);
+        }, 500);
+        
+        // (참고: API 호출 로직을 넣을 때 이 sendResponse를 써서 '본부'에 응답해야 합니다.)
     }
-  );
+});
+
+
+// =========================================================
+// 2. 배너 생성 및 주입 함수 (UI 빌더)
+// =========================================================
+function injectWarningBanner(data) {
+    // --- 2-1. (중요!) 새 영상이므로, 기존 배너가 있다면 싹 지운다 ---
+    const existingBanner = document.getElementById("yt-warning-banner");
+    if (existingBanner) {
+        existingBanner.remove();
+    }
+
+    // --- 2-2. 헤더 및 클래스 설정 ---
+    const banner = document.createElement('div');
+    banner.id = "yt-warning-banner";
+    
+    let headerText = '';
+    if (data.riskLevel === '높음') {
+        banner.classList.add('grade-danger');
+        headerText = '⚠️ 시청 주의';
+    } else {
+        banner.classList.add('grade-warn');
+        headerText = '🟡 확인 필요';
+    }
+
+    // --- 2-3. 상세 분석 내용 HTML로 변환 ---
+    const issuesHtml = data.issues.map(issue => `
+        <div class="warning-issue">
+            <p class="warning-issue-text">"${issue.text}"</p>
+            <div class="warning-issue-reason">
+                <span class="timestamp">${issue.timestamp}</span>
+                🚨 ${issue.reason}
+            </div>
+        </div>
+    `).join('');
+
+    // --- 2-4. 배너의 '내용물' 채우기 ---
+    banner.innerHTML = `
+        <div class="warning-header">
+            <h4>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:18px; height:18px; stroke:#ef4444; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                ${headerText}
+            </h4>
+            <button id="warning-close-btn" title="닫기">&times;</button>
+        </div>
+        <div class="warning-body">
+            <p>${data.summaryMessage}</p>
+            <button id="warning-details-btn">이유 보기</button>
+            <div class="warning-details">${issuesHtml}</div>
+        </div>
+    `;
+
+    // --- 2-5. (⭐️제일 중요⭐️) 롱폼/쇼츠 '주입 위치' 찾기 ---
+    let injectionParent = null;
+    const longFormPlayer = document.querySelector('#movie_player');
+    const shortsPlayer = document.querySelector('ytd-shorts[class*="ytd-page-manager"]');
+
+    if (longFormPlayer && longFormPlayer.parentElement) {
+        injectionParent = longFormPlayer.parentElement;
+    } else if (shortsPlayer) {
+        injectionParent = shortsPlayer;
+        // 쇼츠는 스크롤되므로, 배너 위치를 'fixed'로 강제합니다.
+        banner.style.position = 'fixed';
+        banner.style.top = '15px';
+        banner.style.right = '15px';
+    }
+
+    // --- 2-6. 찾은 위치에 '주입' 및 이벤트 연결 ---
+    if (injectionParent) {
+        injectionParent.appendChild(banner);
+        console.log("CS: ✅ 경고 배너 주입 성공!");
+        addBannerEventListeners(banner);
+    } else {
+        console.error("CS: ❌ 배너를 주입할 위치(#movie_player 또는 ytd-shorts)를 찾지 못했습니다.");
+    }
 }
 
-window.addEventListener("load", () => {
-  analyzeCurrentVideo();
-});
+
+// =========================================================
+// 3. 배너 내부 버튼 작동 함수 (이전 코드와 동일)
+// =========================================================
+function addBannerEventListeners(bannerElement) {
+    const closeBtn = bannerElement.querySelector("#warning-close-btn");
+    const detailsBtn = bannerElement.querySelector("#warning-details-btn");
+    const detailsContent = bannerElement.querySelector(".warning-details");
+
+    if(closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            bannerElement.remove();
+        });
+    }
+    
+    if(detailsBtn) {
+        detailsBtn.addEventListener('click', () => {
+            const isVisible = detailsContent.classList.toggle('show');
+            detailsBtn.innerText = isVisible ? "숨기기" : "이유 보기";
+        });
+    }
+}
