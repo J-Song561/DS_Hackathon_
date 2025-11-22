@@ -8,27 +8,22 @@
     "default_popup": "frontend/popup.html"
   },
 
-  "content_scripts": [
-    {
-      "matches": [
-        "https://www.youtube.com/watch*",
-        "https://www.youtube.com/shorts/*"
-      ],
-      "js": ["frontend/js/content_script.js"],
-      "css": ["frontend/css/warning_banner.css"]
-    }
-  ],
-
   "background": {
     "service_worker": "background.js"
   },
 
-  "permissions": [
-    "storage",
-    "activeTab",
-    "tabs"
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["content_script.js"],
+      "run_at": "document_end"
+    }
   ],
+
+  "permissions": ["storage", "tabs"],
+  
   "host_permissions": [
-    "http://localhost:8000/*"
+    "http://localhost:8000/*",
+    "*://*.youtube.com/*"
   ]
 }

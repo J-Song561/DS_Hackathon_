@@ -1,7 +1,7 @@
 // frontend/js/popup.js
 
 document.addEventListener("DOMContentLoaded", function () {
-  const API_URL = "http://localhost:8000/api/analyze/";
+  const API_URL = "http://localhost:8000/api/analyze/";  
 
   const wrapper = document.getElementById("popup-wrapper");
   const scoreEl = document.getElementById("score-display");
@@ -16,6 +16,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return "위험";
       case "MEDIUM":
         return "주의";
+      case "POSSIBLE":        
+        return "의심";         
       case "LOW":
         return "경미";
       case "NONE":
@@ -31,16 +33,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (level === "HIGH") {
       wrapper.classList.add("grade-danger");
-      scoreEl.style.color = "red";
-      gradeEl.style.color = "red";
+      scoreEl.style.color = "#DC2626";      // Red
+      gradeEl.style.color = "#DC2626";
     } else if (level === "MEDIUM") {
-      scoreEl.style.color = "orange";
-      gradeEl.style.color = "orange";
+      scoreEl.style.color = "#EA580C";      // Orange
+      gradeEl.style.color = "#EA580C";
+    } else if (level === "POSSIBLE") {      
+      scoreEl.style.color = "#FBBF24";      // Yellow 
+      gradeEl.style.color = "#FBBF24";
     } else if (level === "LOW") {
-      scoreEl.style.color = "green";
-      gradeEl.style.color = "green";
+      scoreEl.style.color = "#10B981";      // Green
+      gradeEl.style.color = "#10B981";
     } else {
-      scoreEl.style.color = "#444";
+      scoreEl.style.color = "#444";         // Gray
       gradeEl.style.color = "#444";
     }
   }
@@ -53,15 +58,17 @@ document.addEventListener("DOMContentLoaded", function () {
     // Extract hazard level
     const level = analysis.hazard_level || "NONE";
     
-    // Extract score - try multiple possible field names
+    // Extract score
     const score = analysis.final_score ?? analysis.total_score ?? analysis.score ?? 0;
     
-    // Extract summary - try multiple possible field names or create default
-    const summary = 
-      analysis.analysis_summary || 
-      analysis.summary || 
-      analysis.message || 
-      `유해도 점수: ${score}점. ${analysis.is_hazardous ? '주의가 필요한 콘텐츠입니다.' : '안전한 콘텐츠입니다.'}`;
+    // Extract summary
+    let summary;
+    if (level === "NONE") {
+        summary = "안전한 콘텐츠입니다.";
+    } else {
+        // LOW, POSSIBLE, MEDIUM, HIGH
+        summary = "주의가 필요한 콘텐츠입니다.";
+    }
 
     // Update UI
     scoreEl.innerText = `총점: ${score}점`;
@@ -106,12 +113,15 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await response.json();
       console.log("백엔드 응답:", data);
 
+      chrome.storage.local.set({ 'lastAnalysisResult': data }, () => {
+        console.log('분석 결과 저장 완료');
+      });
+
       renderResult(data);
       
     } catch (error) {
       console.error("분석 오류:", error);
       
-      // More detailed error messages
       if (error.message.includes("Failed to fetch")) {
         messageEl.innerText = "서버에 연결할 수 없습니다. Django 서버가 실행 중인지 확인하세요.";
       } else {
@@ -122,7 +132,6 @@ document.addEventListener("DOMContentLoaded", function () {
       gradeEl.innerText = "";
       
     } finally {
-      // Re-enable button
       analyzeBtn.disabled = false;
     }
   });

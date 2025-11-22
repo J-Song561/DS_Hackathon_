@@ -1,0 +1,177 @@
+/* frontend/css/banner.css */
+
+/* ========================================
+   Grade Color Classes (Matching popup.css)
+   ======================================== */
+
+   .grade-danger {
+    border: 3px solid red;
+    background-color: #ffe0e0;
+}
+
+.grade-warn {
+    border: 3px solid orange;
+    background-color: #fff4e0;
+}
+
+.grade-caution {
+    border: 3px solid #FBBF24;
+    background-color: #fffbeb;
+}
+
+.grade-safe {
+    border: 3px solid green;
+    background-color: #e0ffe0;
+}
+
+/* ========================================
+   Warning Banner Container
+   ======================================== */
+
+#yt-warning-banner {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    position: relative;
+}
+
+/* For YouTube Shorts - Fixed position */
+#yt-warning-banner.shorts-mode {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+}
+
+/* ========================================
+   Banner Header
+   ======================================== */
+
+.warning-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.warning-header h4 {
+    margin: 0;
+    font-size: 3em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.warning-header svg {
+    width: 40px;
+    height: 40px;
+    margin-right: 8px;
+}
+
+#warning-close-btn {
+    background: none;
+    border: none;
+    font-size: 36px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+}
+
+#warning-close-btn:hover {
+    color: #000;
+}
+
+/* ========================================
+   Banner Body
+   ======================================== */
+
+.warning-body {
+    margin-top: 12px;
+}
+
+.warning-body p {
+    margin: 8px 0;
+    color: #333;
+    line-height: 1.5;
+    font-size: 1.5em;
+    font-weight: bold;
+    text-align: center;
+}
+
+#warning-details-btn {
+    width: 100%;
+    padding: 10px;
+    cursor: pointer;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+#warning-details-btn:hover {
+    background: #45a049;
+}
+
+/* ========================================
+   Details Section (Expandable)
+   ======================================== */
+
+.warning-details {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid #ddd;
+}
+
+.warning-details.show {
+    display: block;
+}
+
+.warning-issue {
+    background: #f9f9f9;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    text-align: left;
+}
+
+.warning-issue-text {
+    font-weight: bold;
+    margin: 0 0 4px 0;
+    color: red;
+    font-size: 16px;
+}
+
+.warning-issue-reason {
+    font-size: 13px;
+    color: #666;
+    margin: 0;
+}
+
+/* ========================================
+   Loading State
+   ======================================== */
+
+#yt-warning-banner.loading {
+    background: #f0f0f0;
+    text-align: center;
+    border: 2px solid #ccc;
+}
+
+#yt-warning-banner.loading p {
+    margin: 0;
+    padding: 15px;
+    color: #666;
+    font-size: 16px;
+}

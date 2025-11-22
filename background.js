@@ -55,9 +55,11 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 // =========================================================
-// 2. 백엔드 통신 (CORS 우회용 프록시)
+// 2. 메시지 핸들러 (백엔드 통신 + Details 페이지 열기)
 // =========================================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    
+    // 2-1. 백엔드 분석 요청
     if (message.type === "ANALYZE_VIDEO") {
         console.log("BG: 분석 요청 수신 -> 백엔드로 전달:", message.url);
         
@@ -89,6 +91,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({ error: error.message });
         });
 
-        return true;
+        return true; // Keep channel open for async response
+    }
+    
+    // 2-2. Details 페이지 열기 요청
+    if (message.action === "openDetails") {
+        console.log("BG: Details 페이지 열기 요청 수신");
+        chrome.tabs.create({
+            url: chrome.runtime.getURL('frontend/details.html')
+        }, (tab) => {
+            console.log("BG: Details 페이지 열림, Tab ID:", tab.id);
+        });
+        return false; // No async response needed
     }
 });
+
+console.log("BG: 모든 리스너 등록 완료!");
