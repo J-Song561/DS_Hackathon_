@@ -1,5 +1,5 @@
 from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api._errors import NoTranscriptFound
+from youtube_transcript_api._errors import NoTranscriptFound, TranscriptsDisabled
 from urllib.parse import urlparse, parse_qs
 
 def get_video_id(url):  # YouTube URL에서 video ID 추출
@@ -30,33 +30,37 @@ def fetch_youtube_transcript(video_url):  # 영상 대본 가져와 딕셔너리
     
     # 대본 가져오기
     try:
+        api = YouTubeTranscriptApi()
+        
         # 사용 가능한 자막 목록 조회
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+        transcript_list = api.list(video_id)
         
-        # 한국어 또는 영어 자막을 우선적으로 찾고, 없으면 사용 가능한 다른 자막을 찾기
-        try:
-            # 한국어 자막 시도
-            transcript = transcript_list.find_transcript(['ko']).fetch()
-        except NoTranscriptFound:
+        transcript_obj = None
+        for lang in ['ko', 'en', 'en-US', 'en-GB']:
             try:
-                # 없으면 영어 자막 시도
-                transcript = transcript_list.find_transcript(['en']).fetch()
-            except NoTranscriptFound:
-                # 그 외 자막
-                transcript = transcript_list.find_transcript(['ko', 'en', 'en-US', 'en-GB']).fetch()
-
-        # 대본 텍스트를 하나로 합치기
-        transcript_text = " ".join([item['text'] for item in transcript])
+                transcript_obj = transcript_list.find_transcript([lang])
+                break
+            except:
+                continue
         
-    except NoTranscriptFound:
+        if not transcript_obj:
+            transcript_obj = (
+                transcript_list._manually_created_transcripts[0] 
+                if transcript_list._manually_created_transcripts 
+                else transcript_list._generated_transcripts[0]
+            )
+        
+        transcript_data = transcript_obj.fetch()
+        transcript_text = " ".join([snippet.text for snippet in transcript_data])
+
+    except (NoTranscriptFound, TranscriptsDisabled) as e:
         # 해당 영상에 자막 자체가 없는 경우
-        print(f"Video ID {video_id} 에 대한 대본을 찾을 수 없습니다.")
+        print(f"Video ID {video_id} 에 대한 대본을 찾을 수 없습니다: {e}")
         return {"error": "해당 영상의 대본을 찾을 수 없습니다."}
     except Exception as e:
         # 기타 오류 
         print(f"YouTube Transcript API 오류: {e}")
         return {"error": f"대본 추출 중 예기치 않은 오류 발생: {e}"}
-
 
     # 최종 결과 반환
     result = {
@@ -65,3 +69,4 @@ def fetch_youtube_transcript(video_url):  # 영상 대본 가져와 딕셔너리
     }
     
     return result
+        
