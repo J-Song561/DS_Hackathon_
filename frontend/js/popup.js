@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const score =
       analysis.total_score ??
       analysis.score ??
-      "N/A"; // 필드 이름이 다를 수 있으니 여러개 시도
+      "N/A"; 
     const summary =
       analysis.analysis_summary ||
       analysis.message ||
