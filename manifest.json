@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "유해도 검사기",
-  "version": "0.1",
+  "name": "WatchWise - 유해도 검사기",
+  "version": "1.0",
+  "description": "유튜브 영상의 유해도를 실시간으로 분석하여 알려줍니다.",
 
   "action": {
     "default_popup": "frontend/popup.html"
@@ -9,7 +10,10 @@
 
   "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/*"],
+      "matches": [
+        "https://www.youtube.com/watch*",
+        "https://www.youtube.com/shorts/*"
+      ],
       "js": ["frontend/js/content_script.js"],
       "css": ["frontend/css/warning_banner.css"]
     }
@@ -22,7 +26,7 @@
   "permissions": [
     "storage",
     "activeTab",
-    "tabs"  
+    "tabs"
   ],
   "host_permissions": [
     "http://localhost:8000/*"
