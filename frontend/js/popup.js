@@ -1,9 +1,7 @@
 // frontend/js/popup.js
 
 document.addEventListener("DOMContentLoaded", function () {
-
-  const API_URL = "http://localhost:8000/api/analyze/"; // main/urls.py 기준
-
+  const API_URL = "http://localhost:8000/api/analyze/";
 
   const wrapper = document.getElementById("popup-wrapper");
   const scoreEl = document.getElementById("score-display");
@@ -11,7 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const messageEl = document.getElementById("message-display");
   const urlInput = document.getElementById("urlInput");
   const analyzeBtn = document.getElementById("analyzeBtn");
-
 
   function toKoreanGrade(level) {
     switch (level) {
@@ -27,9 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-
   function applyStyleByLevel(level) {
-
     wrapper.classList.remove("grade-danger");
     scoreEl.style.color = "";
     gradeEl.style.color = "";
@@ -50,21 +45,25 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-
   function renderResult(data) {
-    // data = { url, video_id, analysis: {...} }
+    console.log("백엔드 응답:", data);
+    
     const analysis = data.analysis || {};
 
-    const level = analysis.hazard_level || "NONE"; // 예: HIGH / MEDIUM / LOW
-    const score =
-      analysis.total_score ??
-      analysis.score ??
-      "N/A"; 
-    const summary =
-      analysis.analysis_summary ||
-      analysis.message ||
-      "유해도 분석 요약을 불러오지 못했습니다.";
+    // Extract hazard level
+    const level = analysis.hazard_level || "NONE";
+    
+    // Extract score - try multiple possible field names
+    const score = analysis.final_score ?? analysis.total_score ?? analysis.score ?? 0;
+    
+    // Extract summary - try multiple possible field names or create default
+    const summary = 
+      analysis.analysis_summary || 
+      analysis.summary || 
+      analysis.message || 
+      `유해도 점수: ${score}점. ${analysis.is_hazardous ? '주의가 필요한 콘텐츠입니다.' : '안전한 콘텐츠입니다.'}`;
 
+    // Update UI
     scoreEl.innerText = `총점: ${score}점`;
     gradeEl.innerText = `등급: ${toKoreanGrade(level)}`;
     messageEl.innerText = summary;
@@ -72,12 +71,12 @@ document.addEventListener("DOMContentLoaded", function () {
     applyStyleByLevel(level);
   }
 
-
+  // Load mock data if available (for testing)
   if (typeof mockAnalysisResult !== "undefined") {
     renderResult(mockAnalysisResult);
   }
 
-
+  // Main analyze button handler
   analyzeBtn.addEventListener("click", async () => {
     const url = urlInput.value.trim();
 
@@ -86,26 +85,45 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    // Disable button during analysis
+    analyzeBtn.disabled = true;
     messageEl.innerText = "분석 중입니다...";
+    scoreEl.innerText = "";
+    gradeEl.innerText = "";
 
     try {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }), // request.data.get('url') 로 받는 그 필드
+        body: JSON.stringify({ url }),
       });
 
       if (!response.ok) {
-        throw new Error("서버 응답 오류");
+        const errorText = await response.text();
+        throw new Error(`서버 응답 오류 (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
-      console.log("백엔드 응답:", data); // 개발용 로그
+      console.log("백엔드 응답:", data);
 
       renderResult(data);
+      
     } catch (error) {
-      console.error(error);
-      messageEl.innerText = "유해도 분석 요청 중 오류가 발생했습니다.";
+      console.error("분석 오류:", error);
+      
+      // More detailed error messages
+      if (error.message.includes("Failed to fetch")) {
+        messageEl.innerText = "서버에 연결할 수 없습니다. Django 서버가 실행 중인지 확인하세요.";
+      } else {
+        messageEl.innerText = `오류: ${error.message}`;
+      }
+      
+      scoreEl.innerText = "";
+      gradeEl.innerText = "";
+      
+    } finally {
+      // Re-enable button
+      analyzeBtn.disabled = false;
     }
   });
 });
