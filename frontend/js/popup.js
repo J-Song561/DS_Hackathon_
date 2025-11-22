@@ -2,7 +2,7 @@
 
 document.addEventListener("DOMContentLoaded", function () {
 
-  const API_URL = "http://localhost:8000/api/analyze/transctipt/"; // main/urls.py 기준
+  const API_URL = "http://localhost:8000/api/analyze/"; // main/urls.py 기준
 
 
   const wrapper = document.getElementById("popup-wrapper");
