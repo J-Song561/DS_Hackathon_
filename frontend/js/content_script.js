@@ -89,7 +89,6 @@ function analyzeCurrentVideo() {
   );
 }
 
-// 페이지 로드 후 실행
 window.addEventListener("load", () => {
   analyzeCurrentVideo();
 });
