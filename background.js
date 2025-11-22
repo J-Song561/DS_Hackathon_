@@ -49,7 +49,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // TODO: 실제 사용하는 백엔드 URL로 수정해서 사용
     // (원래 코드에 있던 localhost 버전 사용)
     const djangoApiUrl =
-      "http://localhost:8000/api/analyze/transctipt/"; 
+      "http://localhost:8000/api/analyze/transcript/"; 
     // ※ 백엔드 엔드포인트가 transcript면 철자를 맞춰서 바꿔줘도 됨
 
     fetch(djangoApiUrl, {
