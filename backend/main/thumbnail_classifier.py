@@ -75,5 +75,5 @@ class ThumbnailClassifier:
         }
 
 # 사전에 훈련된 분류 모델 'watchwise_thumbnail_classifier.pkl' 한 번만 로드하여 메모리에 유지
-MODEL_PATH = os.path.join(settings.BASE_DIR, 'main', 'ml_models', 'watchwise_thumbnail_classifier01.pkl')
+MODEL_PATH = os.path.join(settings.BASE_DIR, 'main', 'ml_models', 'watchwise_thumbnail_classifier_01.pkl')
 thumbnail_classifier = ThumbnailClassifier(MODEL_PATH)
