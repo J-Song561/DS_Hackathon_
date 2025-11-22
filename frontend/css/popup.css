@@ -13,13 +13,11 @@
 #score-display {
     font-size: 3em; /* 3배 크기 */
     font-weight: bold;
-    color: red;
 }
 
 #grade-display {
     font-size: 1.5em;
     font-weight: bold;
-    color: red;
     margin-bottom: 10px;
 }
 /* 입력창, 버튼 스타일 */
