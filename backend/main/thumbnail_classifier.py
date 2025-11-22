@@ -49,12 +49,14 @@ class ThumbnailClassifier:
         with open(model_path, 'rb') as f:
             self.knn = pickle.load(f)
     
-    def predict(self, thumbnail_url):        
+    def predict(self, thumbnail_url):
+        from .config import THUMBNAIL_WEIGHT
+
         embedding = self.encoder.encode_from_url(thumbnail_url)
     
         if embedding is None:
             return {  
-                'score': None,
+                'score': 0,
                 'confidence': 0.0,
                 'probabilities': {'safe': 0.0, 'harmful': 0.0}
             }
@@ -64,7 +66,7 @@ class ThumbnailClassifier:
         probabilities = self.knn.predict_proba(embedding)[0]
         
         return {
-            'score': int(prediction),  # 0 or 1 
+            'score': int(prediction) * THUMBNAIL_WEIGHT,  
             'confidence': float(probabilities[prediction]),
             'probabilities': {
                 'safe': float(probabilities[0]),
